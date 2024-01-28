@@ -36,6 +36,18 @@ def download_csv_recursive(ftp, remote_dir, local_dir):
                         # Add the file to the set of downloaded files
                         downloaded_files.add(item)
 
+        # Check for new files in the local directory that are not in the set of downloaded files
+        new_files = set(files_and_dirs) - downloaded_files
+        for new_file in new_files:
+            if new_file.endswith('.csv'):
+                new_file_path = os.path.join(remote_dir, new_file)
+                local_file_path = os.path.join(local_dir, new_file)
+                with open(local_file_path, 'wb') as local_file:
+                    ftp.retrbinary('RETR ' + new_file_path, local_file.write)
+                    print(f'Downloaded new file: {new_file}')
+                    # Add the new file to the set of downloaded files
+                    downloaded_files.add(new_file)
+
     except Exception as e:
         print(f"Error: {e}")
 
