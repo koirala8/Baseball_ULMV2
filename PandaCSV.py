@@ -64,6 +64,17 @@ def download_csv_files_from_ftp(ftp_host, ftp_user, ftp_password, remote_base_di
 
         print('Download complete.')
 
+# Function to delete files in a directory
+def delete_files(directory):
+    for file in os.listdir(directory):
+        file_path = os.path.join(directory, file)
+        try:
+            if os.path.isfile(file_path):
+                os.remove(file_path)
+                print(f"Deleted: {file}")
+        except Exception as e:
+            print(f"Error deleting file {file}: {e}")
+
 
 def merge_csv_files(input_dir, output_file):
     all_data = pd.DataFrame()
@@ -303,7 +314,7 @@ def main():
     ftp_user = 'Louisiana Monroe'
     ftp_password = 'URjIMKVuqr'
     remote_base_directory = '/v3/2024/01/21/CSV'
-    local_directory = 'D:/Baseball/all'
+    local_directory = 'F:/basball/Baseball_ULMV2/all'
     database_name = 'PlayersCSV.db'
     table_name = 'Players'
     csv_columns = ['PitchNo','Date', 'Time', 'PAofInning','PitchofPA','Pitcher','PitcherId',
@@ -333,8 +344,8 @@ def main():
                 'ThrowTrajectoryZc1','ThrowTrajectoryZc2','PitchReleaseConfidence','PitchLocationConfidence','PitchMovementConfidence','HitLaunchConfidence',
                 'HitLandingConfidence','CatcherThrowCatchConfidence','CatcherThrowReleaseConfidence','CatcherThrowLocationConfidence']
     
-    local_directory = 'D:/Baseball/all'  # Update with your actual directory
-    output_file = 'D:/Baseball/merged_output.csv'  # Update with your desired output file path
+    local_directory = 'F:/basball/Baseball_ULMV2/all'  # Update with your actual directory
+    output_file = 'F:/basball/Baseball_ULMV2/all/merged_output.csv'  # Update with your desired output file path
 
     try:
         # Download CSV files from FTP and merge them
@@ -359,6 +370,8 @@ def main():
 
             logging.info("CSV data transfer and database insertion successful.")
 
+            # Delete files after successful insertion
+            delete_files(local_directory)
     except Exception as e:
         logging.error(f"An error occurred: {str(e)}")
 
