@@ -290,8 +290,14 @@ def insert_csv_data_into_database(database_name, table_name, csv_columns, merged
         # Call the function to create the table if it doesn't exist
         create_players_table(cursor, conn)
 
+        # Define column data types
+        column_data_types = {
+            col: 'TEXT'  # Change 'TEXT' to the appropriate data type for each column
+            for col in csv_columns
+        }
+
         # Insert data into the database
-        merged_data.to_sql(table_name, conn, if_exists='replace', index=False)
+        merged_data.to_sql(table_name, conn, if_exists='replace', index=False, dtype=column_data_types)
 
         # Commit the changes and close the connection
         conn.commit()
@@ -347,33 +353,48 @@ def main():
     local_directory = 'F:/basball/Baseball_ULMV2/all'  # Update with your actual directory
     output_file = 'F:/basball/Baseball_ULMV2/all/merged_output.csv'  # Update with your desired output file path
 
-    try:
-        # Download CSV files from FTP and merge them
-        download_csv_files_from_ftp(ftp_host, ftp_user, ftp_password, remote_base_directory, local_directory)
-        merged_data = merge_csv_files(local_directory, output_file)
+    def job():
+        try:
+            # Download CSV files from FTP and merge them
+            download_csv_files_from_ftp(ftp_host, ftp_user, ftp_password, remote_base_directory, local_directory)
+            merged_data = merge_csv_files(local_directory, output_file)
 
-        if merged_data is not None:
-            # Connect to SQLite database
-            conn = sqlite3.connect(database_name)
-            cursor = conn.cursor()
+            if merged_data is not None and not merged_data.empty:  # Check if merged_data is not empty
+                # Connect to SQLite database
+                conn = sqlite3.connect(database_name)
+                cursor = conn.cursor()
 
-            # Call the function to create the table if it doesn't exist
-            create_players_table(cursor, conn)
-            print(f"Number of CSV columns: {len(csv_columns)}")
-            print(f"Number of data columns: {len(merged_data.columns)}")
+                # Call the function to create the table if it doesn't exist
+                create_players_table(cursor, conn)
+                print(f"Number of CSV columns: {len(csv_columns)}")
+                print(f"Number of data columns: {len(merged_data.columns)}")
 
-            # Assuming insert_csv_data_into_database takes cursor, table name, columns, and CSV data
-            insert_csv_data_into_database(database_name, table_name, csv_columns, merged_data)
-            # Commit the changes and close the connection
-            conn.commit()
-            conn.close()
+                # Insert data into the database
+                insert_csv_data_into_database(database_name, table_name, csv_columns, merged_data)
+                # Commit the changes and close the connection
+                conn.commit()
+                conn.close()
 
-            logging.info("CSV data transfer and database insertion successful.")
+                logging.info("CSV data transfer and database insertion successful.")
 
-            # Delete files after successful insertion
-            delete_files(local_directory)
-    except Exception as e:
-        logging.error(f"An error occurred: {str(e)}")
+                # Delete files after successful insertion
+                delete_files(local_directory)
+            else:
+                logging.info("No new data to import.")
+        except Exception as e:
+            logging.error(f"An error occurred: {str(e)}")
+
+
+    # Schedule the job to run every 24 hours
+    schedule.every(24).hours.do(job)
+
+    # Run the job initially
+    job()
+
+    # Keep the script running indefinitely to execute scheduled jobs
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
 
 if __name__ == "__main__":
     main()
