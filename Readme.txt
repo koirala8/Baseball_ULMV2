@@ -44,7 +44,7 @@ This Python script is designed to download CSV files from an FTP server, merge t
 
 5. To Connect SQL Lite Database to PowerBi to get data
 
-	- Visit this Youtube URL: https://youtu.be/6bmTdIeu5rA
+	- Visit this Youtube URL: [Connecting SQLite Database to PowerBI](https://youtu.be/6bmTdIeu5rA)
 
 ## Additional Information
 
